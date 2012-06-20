@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src=" http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=655787809" type="text/javascript" charset="utf-8"></script>
+
+</head>
+<body>
+<div id="main">
+</div>
+
+
+<script type="text/javascript">
+
+if (WB2.checkLogin()) {
+    console.log("logged in.");
+    go();
+} else {
+    WB2.login(function(){
+        go();
+    });    
+}
+
+
+var statuses = [];
+var cursor = -1;
+var pre_count = 20;
+var count = pre_count;
+var friends = [];
+
+function getFriends(W) {
+    console.log("cursor:" + cursor);        
+    W.parseCMD("/friendships/friends.json", function(sResult, bStatus) {
+        
+        console.log(sResult.users.length);
+        //console.log(sResult.total_number);
+        //console.log(sResult)
+        var next_cursor = sResult.next_cursor;
+        var total_number = sResult.total_number;
+        [].push.apply(friends, sResult.users);
+        console.log("friends:"+friends.length)
+        count = total_number - next_cursor;
+        count = count > pre_count ? pre_count : count;
+        console.log("count:"+count);
+        cursor = next_cursor;
+        if (cursor % total_number !== 0) {
+            setTimeout(getFriends, 1000, W); 
+        } else {
+            getStatus(W);
+        }
+    },{
+        screen_name: "mazilx",
+        count: count,
+        cursor: cursor
+    },{
+        method: 'get'
+    });            
+}
+
+function go() {
+    WB2.anyWhere(function(W){
+        getFriends(W);
+    });
+}
+
+function getStatus(W) {
+    console.log("getStatus...");
+    var i = 0;
+    function next(W) {
+        W.parseCMD("/statuses/user_timeline.json", function(sResult, bStatus) {
+            //console.log(u.screen_name);
+            //console.log(sResult);
+            //console.log("status got:" + sResult.statuses.length);
+            [].push.apply(statuses, sResult.statuses);
+            i++;
+            if (i === friends.length - 1) {
+                processStatus(W);
+            } else {
+                setTimeout(next, 200, W);
+            } 
+        }, {
+            uid: friends[i].id
+        }, {
+            method: "get"
+        });
+    }
+    next(W);
+}
+
+
+function processStatus(W) {
+    console.log(statuses.length);
+    statuses.sort(function(a, b) {
+        return b.id - a.id;
+    });
+    var i;
+    for (i = 0; i < 50; i++) {
+        var p = "<p><strong>" + statuses[i].created_at + "</strong> @" + statuses[i].user.screen_name + ": " + statuses[i].text + "</p>";
+        document.getElementById("main").innerHTML += p;
+    }
+}
+
+
+
+</script>
+
+</body>
+</html>
