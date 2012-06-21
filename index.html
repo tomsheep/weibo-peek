@@ -5,19 +5,19 @@
 
 </head>
 <body>
+<label for="name">偷窥：</label>
+<input type="text" name="name" id="name">
+</input>
+<button id="go">Go</button> 
+
 <div id="main">
 </div>
 
 
 <script type="text/javascript">
 
-if (WB2.checkLogin()) {
-    console.log("logged in.");
-    go();
-} else {
-    WB2.login(function(){
-        go();
-    });    
+function $(id) {
+    return document.getElementById(id);
 }
 
 
@@ -26,6 +26,18 @@ var cursor = -1;
 var pre_count = 20;
 var count = pre_count;
 var friends = [];
+var peek_name = "tomsheep";
+
+
+$("go").onclick = function() {
+    peek_name = $("name").value || peek_name;
+    WB2.login(function(){
+        console.log("logged in.");
+        WB2.anyWhere(function(W){
+            getFriends(W);
+        });
+    });    
+}
 
 function getFriends(W) {
     console.log("cursor:" + cursor);        
@@ -48,18 +60,12 @@ function getFriends(W) {
             getStatus(W);
         }
     },{
-        screen_name: "mazilx",
+        screen_name: peek_name,
         count: count,
         cursor: cursor
     },{
         method: 'get'
     });            
-}
-
-function go() {
-    WB2.anyWhere(function(W){
-        getFriends(W);
-    });
 }
 
 function getStatus(W) {
@@ -75,7 +81,7 @@ function getStatus(W) {
             if (i === friends.length - 1) {
                 processStatus(W);
             } else {
-                setTimeout(next, 200, W);
+                next(W);
             } 
         }, {
             uid: friends[i].id
