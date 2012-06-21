@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src=" http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=655787809" type="text/javascript" charset="utf-8"></script>
+<style type="text/css">
+.retweet {
+    border: 1px solid red;
+}
+
+</style>
+
+<script src=" http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=888917383" type="text/javascript" charset="utf-8"></script>
 
 </head>
 <body>
@@ -81,7 +88,7 @@ function getStatus(W) {
             if (i === friends.length - 1) {
                 processStatus(W);
             } else {
-                next(W);
+                setTimeout(next, 50, W);
             } 
         }, {
             uid: friends[i].id
@@ -100,11 +107,49 @@ function processStatus(W) {
     });
     var i;
     for (i = 0; i < 50; i++) {
-        var p = "<p><strong>" + statuses[i].created_at + "</strong> @" + statuses[i].user.screen_name + ": " + statuses[i].text + "</p>";
-        document.getElementById("main").innerHTML += p;
+        //var p = "<p><strong>" + statuses[i].created_at + "</strong> @" + statuses[i].user.screen_name + ": " + statuses[i].text + "</p>";
+        //document.getElementById("main").innerHTML += p;
+        $("main").appendChild(createStatusNode(statuses[i]));
     }
 }
 
+function createStatusNode(status) {
+    console.log(status);
+    var p = document.createElement("p");
+    var img = document.createElement("img");
+    var name = document.createElement("a");
+    var text = document.createElement("span");
+    var retweet;
+    if (status.retweeted_status) {
+        retweet = document.createElement("p");
+        retweet.setAttribute("class", "retweet");
+        var retweet_user = document.createElement("a");
+        retweet_user.setAttribute("href", getUserProfileURL(status.retweeted_status.user.id));
+        retweet_user.innerHTML = "@" + status.retweeted_status.user.screen_name;
+        var retweet_text = document.createElement("span");
+        retweet_text.innerHTML=": " + status.retweeted_status.text;
+
+        retweet.appendChild(retweet_user);
+        retweet.appendChild(retweet_text);
+    }
+
+    text.innerHTML = status.text;
+    img.src = status.user.profile_image_url;
+    name.setAttribute("href",  + getUserProfileURL(status.user.id));
+    name.innerHTML = "@" + status.user.screen_name;
+    p.appendChild(img);
+    p.appendChild(name);
+    p.appendChild(document.createTextNode(": "));
+    p.appendChild(text);
+    if (retweet) {
+        p.appendChild(retweet);
+    }
+    return p;
+}
+
+function getUserProfileURL(id) {
+    return "http://weibo.com/" + id;
+}
 
 
 </script>
